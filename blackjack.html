@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <title>BlackJack</title>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+        <style>
+            .container {
+                display: flex;
+                justify-content: center;
+            }
+
+            .betting {
+                display: flex;
+                flex-direction: row;
+                justify-content: center;
+            }
+
+            .chips {
+                padding: 4px;
+                border: 1px solid grey;
+                row-gap: 10px;
+                margin-right: 10px;
+                margin-top: 10px;
+                margin-bottom: 10px;
+                cursor: pointer;
+            }
+
+            .deal {
+                padding: 10px;
+                border: 1px solid grey;
+                border-radius: 10px;
+                margin-top: 5px;
+                cursor: pointer;
+            }
+
+            .carditems {
+                flex: 0 32%;
+                height: 80px;
+                margin-bottom: 2%;
+                border: 1px solid black;
+                border-radius: 5%;
+                padding: 5%;
+            }
+
+            .playbuttonscontainer, .messagecontainer, .replaybuttoncontainer {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .playbuttons {
+                padding: 5%;
+                border: 1px solid antiquewhite;
+                background-color: beige;
+                margin: 2%;
+                border-radius: 15%;
+                cursor: pointer;
+            }
+
+            .hidden {
+                display: none;
+            }
+
+            .show {
+                display: block;
+            }
+
+            .show-flex {
+                display: flex;
+            }
+
+            #dealercardscontainer, #playercardscontainer {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: space-between;
+                width: 15rem;
+                margin-top: 5%;
+            }
+
+            #dealercontainer, #playercontainer {
+                margin-top: 5%;
+            }
+
+            #bidpricecontainer {
+                display: flex;
+                margin-top: 5px;
+                font-size: 1.5rem;
+            }
+
+            #message {
+                font-size: 2rem;
+                color: red;
+            }
+
+            #bettingmessage {
+                color: red;
+            }
+
+            #bankcontainer, #bettingamountcontainer {
+                display: flex;
+                justify-content: center;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div id="container" class="container">
+            <div id="bettingcontainer">
+                <div id="bankcontainer">
+                    <Label>Wallet: $<span id="bankbalance"></span></Label>
+                </div>
+                <div id="chipscontainer" class="betting">
+                    <div class="chips" onclick="setUpBidAmount(0)">1</div>
+                    <div class="chips" onclick="setUpBidAmount(1)">5</div>
+                    <div class="chips" onclick="setUpBidAmount(2)">25</div>
+                    <div class="chips" onclick="setUpBidAmount(3)">50</div>
+                    <div class="chips" onclick="setUpBidAmount(4)">100</div>
+                    <div class="chips" onclick="setUpBidAmount(5)">500</div>
+                </div>
+                <div id="bettingamountcontainer">
+                    <label> Betting Amount:<span id="bettingamount">0</span></label>
+                </div>
+                <div class="container">
+                    <div class="deal" onclick="startGame()">Deal</div>
+                </div> 
+                <div id="bettingmessagecontainer" class="messagecontainer">
+                    <div id="bettingmessage"></div>
+                </div>
+            </div>
+
+            <div id="gamecontainer" class="hidden">
+                <h1>BlackJack</h1>
+                <div id="dealercontainer">
+                    <label>Dealer Score: <span id="dealerscore"></span></label>
+                    <div id="dealercardscontainer">
+                    </div>
+                </div>
+                <div id="bidpricecontainer">
+                    <span>Bid Amount: $</span> <span id="bidprice"></span>
+                </div>
+                <div id="playercontainer">
+                    <label>Player Score: <span id="playerscore"></span></label>
+                    <div id="playercardscontainer">
+                    </div>
+                </div>
+                <div id="playbuttonscontainer" class="playbuttonscontainer">
+                    <div class="playbuttons" onclick="hit()">Hit</div>
+                    <div class="playbuttons" onclick="stand()">Stand</div>
+                </div>
+                <div id="replaycontainer" class="hide replaybuttoncontainer">
+                    <div class="playbuttons" onclick="replay()">Play Again</div>
+                </div>
+                <div id="messagecontainer" class="messagecontainer">
+                    <div id="message"></div>
+                </div>
+            </div>
+        </div>
+        <script>
+            let dealObj = {
+                chips: [1, 5, 25, 50, 100, 500],
+                bidAmount: 0,
+                deck: [],
+                players: [],
+                bankBalance: 500
+            };
+
+            let suits = ["Spades", "Hearts", "Diamonds", "Clubs"];
+            let values = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"];
+
+            function init() {
+                let bankBalanceEle = document.getElementById("bankbalance");
+                bankBalanceEle.innerText = dealObj.bankBalance;
+                console.log(dealObj.bankBalance);
+            }
+
+            init();
+
+            function setUpBidAmount(index) {
+                document.getElementById("bettingmessage").innerText = ""
+                dealObj.bidAmount += dealObj.chips[index];
+                if (!(dealObj.bidAmount > dealObj.bankBalance)) 
+                {
+                    dealObj.bankBalance -= dealObj.chips[index];
+                    document.getElementById("bettingamount").innerText = dealObj.bidAmount;
+                }
+                console.log(dealObj.bidAmount);
+                init();
+            }
+
+            function buildDeck() {
+                dealObj.deck = [];
+                values.forEach(suitVal => {
+                    suits.forEach(suit => {
+                        let customVal = parseInt(suitVal);
+                        let iconClass = '';
+                        if (suitVal == 'J' || suitVal == 'Q' || suitVal == 'K')                     
+                            customVal = 10;
+                        
+                        if (suitVal == 'A')                     
+                            customVal = 11;
+                        
+                        if (suit == 'Spades')                     
+                            iconClass = 'bi-suit-spade'
+                        
+                        if (suit == 'Hearts') 
+                            iconClass = 'bi-suit-heart';
+                        
+                        if (suit == 'Diamonds') 
+                            iconClass = 'bi-suit-diamond';
+                        
+                        if (suit == 'Clubs') 
+                            iconClass = 'bi-suit-club';
+                        
+                        dealObj.deck.push({ cardsuit: suit, icon: iconClass, value: suitVal, customVal: customVal });
+                    });
+
+                });
+                console.log(dealObj.deck);
+            }
+
+            function shuffleDeck() {
+                for (let index = 0; index < 52; index++) {
+                    let card1 = Math.floor(Math.random() * dealObj.deck.length);
+                    let card2 = Math.floor(Math.random() * dealObj.deck.length);
+                    let temp = dealObj.deck[card1];
+                    dealObj.deck[card1] = dealObj.deck[card2];
+                    dealObj.deck[card2] = temp;
+                }
+                console.log(dealObj.deck);
+            }
+
+            function createPlayers() {
+                for (let index = 0; index < 2; index++) {
+                    if (index == 0)
+                        dealObj.players.push({ name: 'Dealer', cards: [], points: 0 });
+                        
+                    else
+                        dealObj.players.push({ name: 'Player 1', cards: [], points: 0 });
+                }
+            }
+
+            function dealCards() {
+                for (let index = 0; index < 2; index++) {
+                    for (let playerIndex = 0; playerIndex < 2; playerIndex++) 
+                    {
+                        dealPlayerCards(playerIndex);
+                    }
+                }
+            }
+
+            function dealPlayerCards(playerIndex) {
+                let card = dealObj.deck.pop();
+                dealObj.players[playerIndex].points += card.customVal;
+                dealObj.players[playerIndex].cards.push(card);
+                renderUICard(card, playerIndex);
+            }
+
+            function renderUICard(card, playerIndex) {
+                let container = playerIndex == 0 ? document.getElementById("dealercardscontainer") : document.getElementById("playercardscontainer");
+                let cardDiv = document.createElement("div");
+                let cardValue = document.createElement("div");
+                let cardIcon = document.createElement("i");
+                cardIcon.classList.add("bi", card.icon);
+                cardValue.innerText = card.value;
+                cardDiv.appendChild(cardValue);
+                cardDiv.appendChild(cardIcon);
+                cardDiv.classList.add("carditems");
+                container.append(cardDiv);
+            }
+
+            function startGame() {
+                let bettingContainer = document.getElementById("bettingcontainer");
+                let gameContainer = document.getElementById("gamecontainer");
+                let bidPriceContainer = document.getElementById("bidprice");
+                let playbuttoncontainer = document.getElementById("playbuttonscontainer");
+                let replaybuttoncontainer = document.getElementById("replaycontainer");  
+
+                if(dealObj.bidAmount == 0){
+
+                    document.getElementById("bettingmessage").innerText = "Please bid an amount to start playing";
+                    
+                }else{
+                    document.getElementById("bettingmessage").innerText = "";
+                    bidPriceContainer.innerText = dealObj.bidAmount;
+
+                    playbuttoncontainer.classList.add("show-flex");
+                    replaybuttoncontainer.classList.add("hidden");
+                    replaybuttoncontainer.classList.remove("show-flex");
+                    bettingContainer.classList.add("hidden");
+                    bettingContainer.classList.remove("show");
+                    gameContainer.classList.add("show");
+                    gameContainer.classList.remove("hidden");
+
+                    buildDeck();
+                    shuffleDeck();
+                    createPlayers();
+                    dealCards();
+
+                    let dealerPlayerPoints = dealObj.players[0].points;
+                    let playerPoints = dealObj.players[1].points;
+
+                    console.log(dealerPlayerPoints + ' - ' + playerPoints);
+
+                    if (dealerPlayerPoints == 21 || playerPoints > 21)
+                        playerWinningMessage(false);
+
+                    else if (playerPoints == 21 || dealerPlayerPoints > 21)
+                        playerWinningMessage(true);
+
+                    showPoints();
+                }
+                
+            }
+
+            function hit(playerIndex = 1) {
+                dealPlayerCards(1);
+                let dealerPlayerPoints = dealObj.players[0].points;
+                let playerPoints = dealObj.players[1].points;
+                console.log('In hit: '+ dealerPlayerPoints + ' - ' + playerPoints);
+                if (playerPoints == 21) 
+                    playerWinningMessage(true);
+                
+                else if (dealerPlayerPoints == 21 || playerPoints > 21) 
+                    playerWinningMessage(false);
+                
+                showPoints();
+            }
+
+            function stand() {
+                while (dealObj.players[0].points < 17) 
+                {
+                    dealPlayerCards(0);
+                }
+                let dealerPlayerPoints = dealObj.players[0].points;
+                let playerPoints = dealObj.players[1].points;
+                console.log('In stand: ' + dealerPlayerPoints + ' - ' + playerPoints);
+                if (dealerPlayerPoints > playerPoints && dealerPlayerPoints <= 21) 
+                    playerWinningMessage(false);
+
+                else if ((playerPoints > dealerPlayerPoints && dealerPlayerPoints >= 17 && dealerPlayerPoints <= 21 && playerPoints <= 21) || dealerPlayerPoints > 21) 
+                    playerWinningMessage(true);
+
+                else if (dealerPlayerPoints == playerPoints) 
+                    playerWinningMessage(false, true);
+                
+                showPoints();
+            }
+
+            function replayGame() {
+                document.getElementById("playbuttonscontainer").classList.add("hidden");
+                document.getElementById("playbuttonscontainer").classList.remove("show-flex");
+                document.getElementById("replaycontainer").classList.add("show-flex");
+            }
+
+            function replay() {
+                let bettingContainer = document.getElementById("bettingcontainer");
+                let gameContainer = document.getElementById("gamecontainer");
+                let messageContainer = document.getElementById("message");
+                let dealerCardsContainer = document.getElementById("dealercardscontainer");
+                let playerCardsContainer = document.getElementById("playercardscontainer");
+                messageContainer.innerText = '';
+                bettingContainer.classList.add("show");
+                bettingContainer.classList.remove("hidden");
+                gameContainer.classList.add("hidden");
+                gameContainer.classList.remove("show");
+                dealObj.deck = [];
+                dealObj.players = [];
+                dealObj.bidAmount = 0;
+                document.getElementById("bettingamount").innerText = dealObj.bidAmount;
+                while (dealerCardsContainer.firstChild) 
+                {
+                    dealerCardsContainer.removeChild(dealerCardsContainer.firstChild);
+                }
+                while (playerCardsContainer.firstChild) 
+                {
+                    playerCardsContainer.removeChild(playerCardsContainer.firstChild);
+                }
+
+            }
+
+            function showPoints() {
+                let dealerPlayerPoints = dealObj.players[0].points;
+                let playerPoints = dealObj.players[1].points;
+
+                document.getElementById("playerscore").innerText = playerPoints;
+                document.getElementById("dealerscore").innerText = dealerPlayerPoints;
+            }
+
+            function playerWinningMessage(isPlayerWinning, isDraw = false) {
+                let messageContainer = document.getElementById("message");
+                let dealerPlayerPoints = dealObj.players[0].points;
+                let playerPoints = dealObj.players[1].points;
+                if (isPlayerWinning) 
+                {
+                    if (playerPoints == 21) 
+                        messageContainer.innerText = "You win!! BLACKJACK!!!";
+                    
+                    else 
+                        messageContainer.innerText = "You win!!";
+                    
+                    dealObj.bankBalance += dealObj.bidAmount;
+                }
+                else if (!isPlayerWinning) {
+                    if (isDraw) 
+                    {
+                        messageContainer.innerText = "It's a draw!!";
+                        dealObj.bankBalance += dealObj.bidAmount;
+                    } 
+                    else 
+                    {
+                        if (dealerPlayerPoints == 21) 
+                            messageContainer.innerText = "Dealer wins!! BLACKJACK!!";
+
+                        else 
+                            messageContainer.innerText = "Dealer wins!!";                    
+                    }
+                }
+                if (messageContainer.innerText) 
+                {
+                    replayGame();
+                    init();
+                }
+            }
+        </script>
+    </body>
+</html>
